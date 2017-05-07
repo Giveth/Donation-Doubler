@@ -150,15 +150,20 @@ contract DonationDoubler is Escapable{
         // When there is enough ETH in the contract to double the ETH sent
         if (this.balance >= msg.value){
             amount = msg.value * 2; // do it two it!
+            
+
+            // Send the ETH to the beneficiary so that they receive Campaign tokens
+            if (!beneficiary.proxyPayment.value(amount)(msg.sender))
+                throw;
             DonationDoubled(msg.sender, amount);
         } else {
             amount = msg.value + this.balance;
+
+            // Send the ETH to the beneficiary so that they receive Campaign tokens
+            if (!beneficiary.proxyPayment.value(amount)(msg.sender))
+                throw;
             DonationSentButNotDoubled(msg.sender, amount);
         }
-
-        // Send the ETH to the beneficiary so that they receive Campaign tokens
-        if (!beneficiary.proxyPayment.value(amount)(msg.sender))
-            throw;
     }
 
     event DonationDeposited4Doubling(address indexed sender, uint amount);
