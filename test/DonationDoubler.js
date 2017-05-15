@@ -150,7 +150,7 @@ contract("Donation_Doubler", (accounts) => {
         // let res = await web3.eth.sendTransaction({from:owner, to: benfic, value: wei(10000)})
     });
 
-    // it('Should double', async () => {
+    // it('Should double the donation', async () => {
     //     await dblr.depositETH({value: wei(10000), from: owner})
     //     await dblr.depositETH({value: wei(10000), from: owner})
     //     let benfic = await dblr.beneficiary()
@@ -184,7 +184,7 @@ contract("Donation_Doubler", (accounts) => {
     //     assert.equal(args.sender, owner);
     // });    
 
-    // it('Should double', async () => {
+    // it('Should send donation but not double if less than double donation is in the fund', async () => {
     //     await dblr.depositETH({value: wei(10000), from: owner})
     //     await dblr.depositETH({value: wei(10000), from: owner})
     //     await dblr.depositETH({value: wei(10000), from: owner})
