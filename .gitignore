@@ -1,0 +1,42 @@
+# adapted from https://raw.githubusercontent.com/nicolashery/mac-dev-setup/master/.gitignore
+# folder view configs
+.DS_Store
+Desktop.ini
+
+# thumbnail cache
+._*
+Thumbs.db
+
+# files that might appear on external disks
+.Spotlight-V100
+.Trashes
+
+# build directories
+build
+dist
+old
+stats.json
+.happypack
+
+# python
+.Python
+*.pyc
+venv
+
+# java
+*.class
+.gradle
+
+# node
+node_modules
+logs
+*.log
+npm-debug.log*
+
+
+# bower
+bower_components
+
+# other
+assets
+.sass-cache
