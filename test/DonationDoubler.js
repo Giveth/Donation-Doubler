@@ -11,22 +11,6 @@ const wei = require("./helpers/wei.js");
 const assertJump = require("./helpers/assertJump.js");
 const timeTravel = require('./helpers/timeTravel.js');
 
-// tokenName: "MiniMe Test Token",
-//            decimalUnits: 18,
-//            tokenSymbol: "MMT",
-//            escapeCaller,
-//            escapeDestination,
-//            absoluteMinTimeLock: 86400,
-//            timeLock: 86400 * 2,
-//            securityGuard,
-//            maxSecurityGuardDelay: 86400 * 21,
-        // address _tokenFactory,
-        // address _parentToken,
-        // uint _parentSnapShotBlock,
-        // string _tokenName,
-        // uint8 _decimalUnits,
-        // string _tokenSymbol,
-        // bool _transfersEnabled
 contract("Donation_Doubler", (accounts) => {
     const {
         0: owner,
@@ -44,27 +28,12 @@ contract("Donation_Doubler", (accounts) => {
     let tokenFactory;
     let token;
     let vault;
-    beforeEach( async () => {
-        
-        now = (await web3.eth.getBlock("latest")).timestamp
-        // Campaign _beneficiary,
-        // address _escapeHatchCaller,
-        // address _escapeHatchDestination
-        // campaign =  ¡
 
-        // it("Get Now", (done) => {
-        //     ethConnector.web3.eth.getBlock("latest", (err, block) => {
-        //         assert.ifError(err);
-        //         now = block.timestamp;
-        //         done();
-        //     });
-        // uint _startFundingTime,
-        // uint _endFundingTime,
-        // uint _maximumFunding,
-        // address _vaultAddress,
-        // address _tokenAddress
+    beforeEach( async () => {
+        now = (await web3.eth.getBlock("latest")).timestamp
         tokenFactory = await TokenFactory.new( //  
         )
+
         token = await Token.new(
             tokenFactory.address,
             0,
@@ -75,7 +44,7 @@ contract("Donation_Doubler", (accounts) => {
             true // transfers enabled
         )
         vault = await Vault.new(
-            token.address,
+            0,
             escapeHatchCaller,
             escapeHatchDestination,
             86400, // absoluteMinTimeLock
@@ -90,6 +59,9 @@ contract("Donation_Doubler", (accounts) => {
             vault.address, //vaultAddress
             token.address 
         )
+        let T = Token.at(token.address)
+        await T.changeController(campaign.address)
+
         dblr = await DonationDoubler.new(
             // deploy a GivethCampaign here
             campaign.address,
@@ -112,110 +84,150 @@ contract("Donation_Doubler", (accounts) => {
         assert.equal(event, "DonationDeposited4Doubling");
         assert.equal(args.amount.toNumber(), 10000);
         assert.equal(args.sender, owner);
+        assert.equal((web3.eth.getBalance(dblr.address)).toNumber(), 10000);
     });
 
-    it('Should deposit ETH correctly', async () => {
-        let {event, args} = (await dblr.depositETH({value: wei(10000), from: owner})).logs[0]
-        assert.equal(event, "DonationDeposited4Doubling");
-        assert.equal(args.amount.toNumber(), 10000);
-        assert.equal(args.sender, owner);
-    });
-
-    it('Should double', async () => {
-        await dblr.depositETH({value: wei(10000), from: owner})
-        await dblr.depositETH({value: wei(10000), from: owner})
+    it('Should double donation', async () => {
         let benfic = await dblr.beneficiary()
         let Campaign = GivethCampaign.at(benfic)
+
+        await dblr.depositETH({value: wei(10000), from: owner})
         await timeTravel(days(2))
 
         let now = web3.eth.getBlock("latest").timestamp
         assert.isTrue(
             now > (await Campaign.startFundingTime.call()).toNumber()
         );        
-
-        let T = Token.at(await Campaign.tokenContract())
         assert.isTrue(
             now < (await Campaign.endFundingTime.call()).toNumber()
         );        
         assert.isTrue(
             await Campaign.tokenContract.call() !== 0
         );        
-
         assert.isTrue(
             await Campaign.totalCollected.call() < await Campaign.maximumFunding.call()
         );
-        //TODO: INVALID OPCODE
-        // let res = await Campaign.proxyPayment(owner, {value: wei(10000)})
-        // let res = await Campaign.send({value: wei(10000)})
-        // let res = await web3.eth.sendTransaction({from:owner, to: benfic, value: wei(10000)})
+
+        const {event, args} = (await dblr.sendTransaction({value: wei(10000), gas: wei(1000000)})).logs[0]
+
+        assert.equal((web3.eth.getBalance(dblr.address)).toNumber(), 0);
+        assert.equal(event, "DonationDoubled");
+        assert.equal(args.sender, owner);
+        assert.equal(args.amount.toNumber(), 20000);
+
     });
 
-    // it('Should double the donation', async () => {
-    //     await dblr.depositETH({value: wei(10000), from: owner})
-    //     await dblr.depositETH({value: wei(10000), from: owner})
-    //     let benfic = await dblr.beneficiary()
-    //     let Campaign = GivethCampaign.at(benfic)
+    it('Should double the donation after fund is emptied and re-funded with new donations', async () => {
+        await dblr.depositETH({value: wei(50000), from: owner})
+        let benfic = await dblr.beneficiary()
+        let Campaign = GivethCampaign.at(benfic)
 
-    //     await timeTravel(days(2))
+        await timeTravel(days(2))
 
-    //     let now = web3.eth.getBlock("latest").timestamp
-    //     let T = Token.at(await Campaign.tokenContract())
+        let now = web3.eth.getBlock("latest").timestamp
+        let T = Token.at(await Campaign.tokenContract())
 
-    //     assert.isTrue(
-    //         now > (await Campaign.startFundingTime.call()).toNumber()
-    //     );        
+        assert.isTrue(
+            now > (await Campaign.startFundingTime.call()).toNumber()
+        );        
+        assert.isTrue(
+            now < (await Campaign.endFundingTime.call()).toNumber()
+        );        
+        assert.isTrue(
+            await Campaign.tokenContract.call() !== 0
+        );        
+        assert.isTrue(
+            await Campaign.totalCollected.call() < await Campaign.maximumFunding.call()
+        );
 
-    //     assert.isTrue(
-    //         now < (await Campaign.endFundingTime.call()).toNumber()
-    //     );        
-    //     assert.isTrue(
-    //         await Campaign.tokenContract.call() !== 0
-    //     );        
+        const {event, args} = (await dblr.sendTransaction({value: wei(50000), gas: wei(1000000)})).logs[0]
 
-    //     assert.isTrue(
-    //         await Campaign.totalCollected.call() < await Campaign.maximumFunding.call()
-    //     );
+        assert.equal((web3.eth.getBalance(dblr.address)).toNumber(), 0);
+        assert.equal(event, "DonationDoubled");
+        assert.equal(args.amount.toNumber(), 100000);
+        assert.equal(args.sender, owner);
 
-    //     // FIX: invalid opcode
-    //     let {event, args} = (await Campaign.proxyPayment(owner, {value: wei(10000), from: owner })).logs[0]
+        await dblr.depositETH({value: wei(50000), from: owner});
+        // local scope to allow declaring of {event, args} variables again
+       {
+            const {event, args} = (await dblr.sendTransaction({value: wei(50000), gas: wei(1000000)})).logs[0]
 
-    //     assert.equal(event, "DonationDoubled");
-    //     assert.equal(args.amount.toNumber(), 20000);
-    //     assert.equal(args.sender, owner);
-    // });    
+            assert.equal((web3.eth.getBalance(dblr.address)).toNumber(), 0);
+            assert.equal(event, "DonationDoubled");
+            assert.equal(args.amount.toNumber(), 100000);
+            assert.equal(args.sender, owner);
+        }
 
-    // it('Should send donation but not double if less than double donation is in the fund', async () => {
-    //     await dblr.depositETH({value: wei(10000), from: owner})
-    //     await dblr.depositETH({value: wei(10000), from: owner})
-    //     await dblr.depositETH({value: wei(10000), from: owner})
-    //     let benfic = await dblr.beneficiary()
-    //     let Campaign = GivethCampaign.at(benfic)
+    });    
 
-    //     await timeTravel(days(2))
+    it('Should send donation but not double if less than double donation is in the fund', async () => {
+        await dblr.depositETH({value: wei(10000), from: owner})
+        let benfic = await dblr.beneficiary()
+        let Campaign = GivethCampaign.at(benfic)
 
-    //     let now = web3.eth.getBlock("latest").timestamp
-    //     let T = Token.at(await Campaign.tokenContract())
+        await timeTravel(days(2))
 
-    //     assert.isTrue(
-    //         now > (await Campaign.startFundingTime.call()).toNumber()
-    //     );        
+        let now = web3.eth.getBlock("latest").timestamp
 
-    //     assert.isTrue(
-    //         now < (await Campaign.endFundingTime.call()).toNumber()
-    //     );        
-    //     assert.isTrue(
-    //         await Campaign.tokenContract.call() !== 0
-    //     );        
+        assert.isTrue(
+            now > (await Campaign.startFundingTime.call()).toNumber()
+        );        
+        assert.isTrue(
+            now < (await Campaign.endFundingTime.call()).toNumber()
+        );        
+        assert.isTrue(
+            await Campaign.tokenContract.call() !== 0
+        );        
+        assert.isTrue(
+            await Campaign.totalCollected.call() < await Campaign.maximumFunding.call()
+        );
+        
+        assert.equal((web3.eth.getBalance(dblr.address)).toNumber(), 10000);
 
-    //     assert.isTrue(
-    //         await Campaign.totalCollected.call() < await Campaign.maximumFunding.call()
-    //     );
+        const {event, args} = (await dblr.sendTransaction({value: wei(20000), gas: wei(1000000)})).logs[0]
 
-    //     let {event, args} = (await Campaign.proxyPayment(owner, {value: wei(20000), from: owner })).logs[0]
+        assert.equal((web3.eth.getBalance(dblr.address)).toNumber(), 0);
+        assert.equal(event, "DonationSentButNotDoubled");
+        assert.equal(args.amount.toNumber(), 30000);
+        assert.equal(args.sender, owner);
+    });
 
-    //     assert.equal(event, "DonationSentButNotDoubled");
-    //     assert.equal(args.amount.toNumber(), 30000);
-    //     assert.equal(args.sender, owner);
+    it('Should send donation but not double if less than double donation is in the fund, after fund has been emptied', async () => {
+        await dblr.depositETH({value: wei(10000), from: owner})
+        let benfic = await dblr.beneficiary()
+        let Campaign = GivethCampaign.at(benfic)
 
-    // });
+        await timeTravel(days(2))
+
+        let now = web3.eth.getBlock("latest").timestamp
+
+        assert.isTrue(
+            now > (await Campaign.startFundingTime.call()).toNumber()
+        );        
+        assert.isTrue(
+            now < (await Campaign.endFundingTime.call()).toNumber()
+        );        
+        assert.isTrue(
+            await Campaign.tokenContract.call() !== 0
+        );        
+        assert.isTrue(
+            await Campaign.totalCollected.call() < await Campaign.maximumFunding.call()
+        );
+
+        const {event, args} = (await dblr.sendTransaction({value: wei(20000), gas: wei(1000000)})).logs[0]
+
+        assert.equal(event, "DonationSentButNotDoubled");
+        assert.equal(args.amount.toNumber(), 30000);
+        assert.equal(args.sender, owner);  
+
+        await dblr.depositETH({value: wei(10000), from: owner})
+        {
+            const {event, args} = (await dblr.sendTransaction({value: wei(20000), gas: wei(1000000)})).logs[0]
+
+            assert.equal((web3.eth.getBalance(dblr.address)).toNumber(), 0);
+            assert.equal(event, "DonationSentButNotDoubled");
+            assert.equal(args.amount.toNumber(), 30000);
+            assert.equal(args.sender, owner);
+        }
+    });
 })

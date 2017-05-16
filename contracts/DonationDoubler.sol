@@ -146,19 +146,19 @@ contract DonationDoubler is Escapable, SafeMath {
 
     /// @notice Donate ETH to the `beneficiary`, and if there is enough in the 
     ///  contract double it. The `msg.sender` is rewarded with Campaign tokens
+    // depending on how one calls into this fallback function, i.e. with .send ( hard limit of 2300 gas ) vs .value (provides fallback with all the available gas of the caller), it may throw
     function () payable {
         uint amount;
 
         // When there is enough ETH in the contract to double the ETH sent
-        if (this.balance >= msg.value){
+        if (this.balance >= multiply(msg.value, 2)){
             amount = multiply(msg.value, 2); // do it two it!
             // Send the ETH to the beneficiary so that they receive Campaign tokens
             if (!beneficiary.proxyPayment.value(amount)(msg.sender))
                 throw;
             DonationDoubled(msg.sender, amount);
         } else {
-            amount = add(msg.value, this.balance);
-
+            amount = this.balance;
             // Send the ETH to the beneficiary so that they receive Campaign tokens
             if (!beneficiary.proxyPayment.value(amount)(msg.sender))
                 throw;
