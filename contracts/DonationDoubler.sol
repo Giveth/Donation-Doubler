@@ -1,6 +1,4 @@
-pragma solidity ^0.4.10;
-
-
+pragma solidity ^0.4.6;
 /*
     Copyright 2017, Vojtech Simetka
 
@@ -32,6 +30,9 @@ pragma solidity ^0.4.10;
 
 /// @dev `Owned` is a base level contract that assigns an `owner` that can be
 ///  later changed
+
+import './SafeMath.sol';
+
 contract Owned {
     /// @dev `owner` is the only address that can call a function with this
     /// modifier
@@ -114,7 +115,7 @@ contract Campaign {
 }
 
 /// @dev Finally! The main contract which doubles the amount donated.
-contract DonationDoubler is Escapable{
+contract DonationDoubler is Escapable, SafeMath {
     Campaign public beneficiary; // expected to be a Giveth campaign
 
     /// @notice The Constructor assigns the `beneficiary`, the
@@ -129,6 +130,7 @@ contract DonationDoubler is Escapable{
     ///  cannot move funds out of `escapeHatchDestination`
     function DonationDoubler(
             Campaign _beneficiary,
+            // person or legal entity that receives money or other benefits from a benefactor
             address _escapeHatchCaller,
             address _escapeHatchDestination
         )
@@ -149,15 +151,13 @@ contract DonationDoubler is Escapable{
 
         // When there is enough ETH in the contract to double the ETH sent
         if (this.balance >= msg.value){
-            amount = msg.value * 2; // do it two it!
-            
-
+            amount = multiply(msg.value, 2); // do it two it!
             // Send the ETH to the beneficiary so that they receive Campaign tokens
             if (!beneficiary.proxyPayment.value(amount)(msg.sender))
                 throw;
             DonationDoubled(msg.sender, amount);
         } else {
-            amount = msg.value + this.balance;
+            amount = add(msg.value, this.balance);
 
             // Send the ETH to the beneficiary so that they receive Campaign tokens
             if (!beneficiary.proxyPayment.value(amount)(msg.sender))

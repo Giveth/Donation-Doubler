@@ -1,0 +1,15 @@
+{
+  "ignore": [
+    ".git",
+    "node_modules/**/node_modules"
+  ],
+  "verbose": true,
+  "events": {
+    "exit": "npm run test:pass",
+    "crash": "npm run test:fail"
+  },
+  "exec": "npm run test",
+  "watch": [
+    "test"
+  ]
+}
