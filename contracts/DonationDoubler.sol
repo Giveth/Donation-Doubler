@@ -17,7 +17,7 @@ pragma solidity ^0.4.6;
  */
 
 /// @title Donation Doubler
-/// @authors Vojtech Simetka, Jordi Baylina
+/// @authors Vojtech Simetka, Jordi Baylina, Dani Philia
 /// @notice This contract is used to double a donation to a Giveth Campaign as
 ///  long as there is enough ether in this contract to do it. If not, the
 ///  donated value is just sent directly to designated Campaign with any ether
@@ -26,6 +26,7 @@ pragma solidity ^0.4.6;
 ///  deposited the inital funds will not receive any donation tokens. 
 ///  WARNING: This contract only works for ether. A token based contract will be
 ///  developed in the future. Any tokens sent to this contract will be lost.
+///  Next Version: Upgrade the EscapeHatch to be able to remove tokens.
 
 
 /// @dev `Owned` is a base level contract that assigns an `owner` that can be
@@ -35,7 +36,8 @@ import './SafeMath.sol';
 
 contract Owned {
     /// @dev `owner` is the only address that can call a function with this
-    /// modifier
+    /// modifier; the function body is inserted where the special symbol
+    /// "_;" in the definition of a modifier appears.
     modifier onlyOwner { if (msg.sender != owner) throw; _; }
 
     address public owner;
@@ -50,13 +52,15 @@ contract Owned {
         owner = _newOwner;
         NewOwner(msg.sender, _newOwner);
     }
-
+    
+    /// @dev Events make it easier to see that something has happend on the
+    ///   blockchain
     event NewOwner(address indexed oldOwner, address indexed newOwner);
 }
 /// @dev `Escapable` is a base level contract built off of the `Owned`
 ///  contract that creates an escape hatch function to send its ether to
-///  `escapeHatchDestination` when called by the `escapeHatchCaller` in the case that
-///  something unexpected happens
+///  `escapeHatchDestination` when called by the `escapeHatchCaller` in the case
+///  that something unexpected happens
 contract Escapable is Owned {
     address public escapeHatchCaller;
     address public escapeHatchDestination;
@@ -67,8 +71,8 @@ contract Escapable is Owned {
     ///  Multisig) to send the ether held in this contract
     /// @param _escapeHatchCaller The address of a trusted account or contract to
     ///  call `escapeHatch()` to send the ether in this contract to the
-    ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller` cannot move
-    ///  funds out of `escapeHatchDestination`
+    ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller` cannot
+    ///  move funds out of `escapeHatchDestination`
     function Escapable(address _escapeHatchCaller, address _escapeHatchDestination) {
         escapeHatchCaller = _escapeHatchCaller;
         escapeHatchDestination = _escapeHatchDestination;
@@ -105,12 +109,12 @@ contract Escapable is Owned {
 }
 
 /// @dev This is an empty contract to declare `proxyPayment()` to comply with
-///  Giveth Campaigns 
+///  Giveth Campaigns so that tokens will be generated when donations are sent
 contract Campaign {
+
     /// @notice `proxyPayment()` allows the caller to send ether to the Campaign and
     /// have the tokens created in an address of their choosing
     /// @param _owner The address that will hold the newly created tokens
-
     function proxyPayment(address _owner) payable returns(bool);
 }
 
@@ -121,7 +125,8 @@ contract DonationDoubler is Escapable, SafeMath {
     /// @notice The Constructor assigns the `beneficiary`, the
     ///  `escapeHatchDestination` and the `escapeHatchCaller` as well as deploys
     ///  the contract to the blockchain (obviously)
-    /// @param _beneficiary The address of the Campaign controller for the Campaign
+    /// @param _beneficiary The address of the CAMPAIGN CONTROLLER for the Campaign
+    ///  that is to receive donations
     /// @param _escapeHatchDestination The address of a safe location (usually a
     ///  Multisig) to send the ether held in this contract
     /// @param _escapeHatchCaller The address of a trusted account or contract
