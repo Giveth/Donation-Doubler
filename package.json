@@ -46,8 +46,6 @@
   "scripts": {
     "test:pre": "truffle compile --compile-all && truffle migrate && npm run test:watch",
     "test:watch": "nodemon",
-    "test": "truffle test test/DonationDoubler.js",
-    "test:pass": "afplay /System/Library/Sounds/Glass.aiff",
-    "test:fail": "afplay /System/Library/Sounds/Sosumi.aiff"
+    "test": "truffle test test/DonationDoubler.js"
   }
 }
