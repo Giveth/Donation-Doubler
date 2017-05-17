@@ -1,0 +1,51 @@
+{
+  "name": "donation-doubler",
+  "version": "0.0.1",
+  "description": "Smart Contract to implement a Donation Doubler",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Giveth/Donation-Doubler.git"
+  },
+  "keywords": [
+    "donation",
+    "doubler",
+    "smart",
+    "contract",
+    "ethereum",
+    "giveth",
+    "dao",
+    "project",
+    "funds"
+  ],
+  "author": "Vojtech Simetka",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Giveth/Donation-Doubler/issues"
+  },
+  "homepage": "https://github.com/Giveth/Donation-Doubler#readme",
+  "devDependencies": {
+    "babel-eslint": "^6.1.2",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-stage-2": "^6.18.0",
+    "babel-preset-stage-3": "^6.17.0",
+    "babel-register": "^6.23.0",
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb": "^14.1.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^4.0.0",
+    "eslint-plugin-mocha": "^4.8.0",
+    "eslint-plugin-node": "^4.2.2",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-react": "^6.10.3",
+    "eslint-plugin-standard": "^3.0.1",
+    "nodemon": "^1.11.0",
+    "truffle": "^3.2.1"
+  },
+  "scripts": {
+    "test:pre": "truffle compile --compile-all && truffle migrate && npm run test:watch",
+    "test:watch": "nodemon",
+    "test": "truffle test test/DonationDoubler.js"
+  }
+}
