@@ -134,8 +134,7 @@ contract DonationDoubler is Escapable, SafeMath {
     ///  `escapeHatchDestination` it would be ideal that `escapeHatchCaller`
     ///  cannot move funds out of `escapeHatchDestination`
     function DonationDoubler(
-            Campaign _beneficiary,
-            // person or legal entity that receives money or other benefits from a benefactor
+            Campaign _beneficiary, // address that receives ether
             address _escapeHatchCaller,
             address _escapeHatchDestination
         )
