@@ -27,14 +27,20 @@ pragma solidity ^0.4.6;
 ///  WARNING: This contract only works for ether. A token based contract will be
 ///  developed in the future. Any tokens sent to this contract will be lost.
 ///  Next Version: Upgrade the EscapeHatch to be able to remove tokens.
+///  STUDENTS: If you are using this contract to learn Solidity, please reference
+///  solidity.readthedocs.io when you need to understand the code and come to the
+///  Giveth Slack #study-group channel to ask questions.
 
 
-/// @dev `Owned` is a base level contract that assigns an `owner` that can be
-///  later changed
 
+/// @dev This line imports the SafeMath.sol so that its functions can be used
 import './SafeMath.sol';
 
+/// @dev `Owned` is a base level contract that assigns an `owner` that can be
+///  later changed, this `owner` is granted the exclusive right to execute 
+///  functions tagged with the `onlyOwner` modifier
 contract Owned {
+
     /// @dev `owner` is the only address that can call a function with this
     /// modifier; the function body is inserted where the special symbol
     /// "_;" in the definition of a modifier appears.
@@ -42,7 +48,8 @@ contract Owned {
 
     address public owner;
 
-    /// @notice The Constructor assigns the message sender to be `owner`
+    /// @notice The Constructor assigns the address that deploys this contract
+    /// to be `owner`
     function Owned() { owner = msg.sender;}
 
     /// @notice `owner` can step down and assign some other address to this role
